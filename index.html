@@ -1,0 +1,2586 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Decision Tree</title>
+
+    <style>
+
+        /* =========================================
+           GENERAL
+        ========================================= */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Georgia, "Times New Roman", serif;
+
+            min-height: 100vh;
+
+            background:
+                linear-gradient(
+                    to bottom,
+                    #75c9f2 0%,
+                    #bdeaff 55%,
+                    #7dbd58 55%,
+                    #4e913d 100%
+                );
+
+            color: #29442c;
+
+            overflow-x: hidden;
+        }
+
+
+        /* =========================================
+           SKY
+        ========================================= */
+
+        .sky {
+            position: fixed;
+            inset: 0;
+            z-index: -10;
+            pointer-events: none;
+        }
+
+        .sun {
+            position: absolute;
+
+            width: 105px;
+            height: 105px;
+
+            right: 65px;
+            top: 40px;
+
+            border-radius: 50%;
+
+            background: #ffe36b;
+
+            box-shadow:
+                0 0 30px rgba(255, 225, 80, .8);
+        }
+
+
+        .cloud {
+            position: absolute;
+
+            width: 150px;
+            height: 42px;
+
+            background: rgba(255,255,255,.85);
+
+            border-radius: 50px;
+        }
+
+        .cloud::before,
+        .cloud::after {
+            content: "";
+
+            position: absolute;
+
+            background: white;
+
+            border-radius: 50%;
+        }
+
+        .cloud::before {
+            width: 70px;
+            height: 70px;
+
+            left: 20px;
+            top: -32px;
+        }
+
+        .cloud::after {
+            width: 85px;
+            height: 85px;
+
+            right: 15px;
+            top: -40px;
+        }
+
+        .cloud1 {
+            top: 85px;
+            left: 20%;
+        }
+
+        .cloud2 {
+            top: 165px;
+            right: 13%;
+
+            transform: scale(.75);
+        }
+
+
+        /* =========================================
+           SIDE MENU
+        ========================================= */
+
+        .side-menu {
+
+            position: fixed;
+
+            left: 0;
+            top: 0;
+
+            width: 235px;
+            height: 100vh;
+
+            padding: 25px 15px;
+
+            background: rgba(255,255,255,.95);
+
+            box-shadow:
+                4px 0 15px rgba(0,0,0,.18);
+
+            z-index: 1000;
+
+            overflow-y: auto;
+        }
+
+
+        .side-menu h2 {
+
+            text-align: center;
+
+            color: #34713a;
+
+            font-size: 24px;
+
+            margin-bottom: 20px;
+        }
+
+
+        .menu-button {
+
+            width: 100%;
+
+            padding: 14px 8px;
+
+            margin: 7px 0;
+
+            border: none;
+
+            border-radius: 15px;
+
+            background: white;
+
+            color: #315f36;
+
+            font-family: Georgia, serif;
+
+            font-size: 14px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 3px 8px rgba(0,0,0,.15);
+
+            transition: .25s;
+        }
+
+
+        .menu-button:hover {
+
+            background: #e3f4df;
+
+            transform: translateX(5px);
+        }
+
+
+        /* =========================================
+           MAIN
+        ========================================= */
+
+        .main {
+
+            margin-left: 235px;
+
+            min-height: 100vh;
+
+            padding: 35px 30px 80px;
+        }
+
+
+        header {
+
+            text-align: center;
+        }
+
+
+        header h1 {
+
+            font-size: 55px;
+
+            color: white;
+
+            text-shadow:
+                3px 3px 0 #3d743e,
+                0 6px 15px rgba(0,0,0,.3);
+
+            margin-bottom: 12px;
+        }
+
+
+        .verse {
+
+            display: inline-block;
+
+            background: rgba(255,255,255,.95);
+
+            padding: 14px 25px;
+
+            border-radius: 20px;
+
+            color: #4b694c;
+
+            font-size: 18px;
+
+            box-shadow:
+                0 4px 12px rgba(0,0,0,.18);
+        }
+
+
+        /* =========================================
+           GET STARTED
+        ========================================= */
+
+        .start-container {
+
+            display: flex;
+
+            justify-content: center;
+            align-items: center;
+
+            margin-top: 55px;
+        }
+
+
+        .start-button {
+
+            border: none;
+
+            background: white;
+
+            color: #356d3d;
+
+            padding: 20px 60px;
+
+            border-radius: 50px;
+
+            font-family: Georgia, serif;
+
+            font-size: 25px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 7px 0 #b8d3b7,
+                0 12px 25px rgba(0,0,0,.25);
+
+            transition: .3s;
+        }
+
+
+        .start-button:hover {
+
+            transform:
+                translateY(-5px)
+                scale(1.04);
+        }
+
+
+        /* =========================================
+           TREE SECTION
+           HIDDEN AT FIRST
+        ========================================= */
+
+        #treeSection {
+
+            display: none;
+
+            margin-top: 40px;
+
+            animation:
+                treeAppear 1.2s ease;
+        }
+
+
+        @keyframes treeAppear {
+
+            from {
+
+                opacity: 0;
+
+                transform:
+                    scale(.88)
+                    translateY(30px);
+            }
+
+            to {
+
+                opacity: 1;
+
+                transform:
+                    scale(1)
+                    translateY(0);
+            }
+        }
+
+
+        .tree-title {
+
+            text-align: center;
+
+            color: white;
+
+            font-size: 31px;
+
+            margin-bottom: 20px;
+
+            text-shadow:
+                2px 3px 7px #245529;
+        }
+
+
+        /* =========================================
+           REALISTIC TREE CONTAINER
+        ========================================= */
+
+        .realistic-tree-container {
+
+            position: relative;
+
+            width: min(1200px, 96vw);
+
+            height: 780px;
+
+            margin: 0 auto;
+
+            overflow: visible;
+        }
+
+
+        /* =========================================
+           ACTUAL REALISTIC TREE IMAGE
+        ========================================= */
+
+        .realistic-tree {
+
+            position: absolute;
+
+            width: 100%;
+            height: 100%;
+
+            object-fit: contain;
+
+            object-position: center bottom;
+
+            user-select: none;
+
+            pointer-events: none;
+
+            filter:
+                drop-shadow(
+                    0 15px 18px rgba(0,0,0,.25)
+                );
+        }
+
+
+        /* =========================================
+           TREE BRANCH LABELS
+        ========================================= */
+
+        .tree-topic {
+
+            position: absolute;
+
+            z-index: 30;
+
+            width: 190px;
+
+            padding: 12px 10px;
+
+            background:
+                rgba(255,255,255,.97);
+
+            border: 3px solid #47783f;
+
+            border-radius: 18px;
+
+            color: #315f36;
+
+            text-align: center;
+
+            font-family: Georgia, serif;
+
+            font-size: 14px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 5px 12px rgba(0,0,0,.3);
+
+            transition: .25s;
+        }
+
+
+        .tree-topic:hover {
+
+            transform: scale(1.08);
+
+            background: #fffce9;
+
+            box-shadow:
+                0 9px 20px rgba(0,0,0,.35);
+        }
+
+
+        /* =========================================
+           8 SITUATION POSITIONS
+        ========================================= */
+
+        .topic-medical {
+
+            left: 2%;
+
+            top: 25%;
+        }
+
+
+        .topic-vacation {
+
+            left: 0%;
+
+            top: 49%;
+        }
+
+
+        .topic-promotion {
+
+            left: 6%;
+
+            top: 68%;
+        }
+
+
+        .topic-pay {
+
+            left: 27%;
+
+            top: 8%;
+        }
+
+
+        .topic-college {
+
+            right: 2%;
+
+            top: 25%;
+        }
+
+
+        .topic-parish {
+
+            right: 0%;
+
+            top: 49%;
+        }
+
+
+        .topic-christmas {
+
+            right: 6%;
+
+            top: 68%;
+        }
+
+
+        .topic-inheritance {
+
+            right: 27%;
+
+            top: 8%;
+        }
+
+
+        /* =========================================
+           BRANCH CONNECTORS
+        ========================================= */
+
+        .tree-line {
+
+            position: absolute;
+
+            z-index: 20;
+
+            height: 5px;
+
+            background: #56351f;
+
+            border-radius: 20px;
+
+            box-shadow:
+                0 2px 3px rgba(0,0,0,.2);
+
+            transform-origin: left center;
+        }
+
+
+        .line-medical {
+
+            width: 150px;
+
+            left: 20%;
+
+            top: 32%;
+
+            transform:
+                rotate(15deg);
+        }
+
+
+        .line-vacation {
+
+            width: 165px;
+
+            left: 17%;
+
+            top: 52%;
+
+            transform:
+                rotate(-4deg);
+        }
+
+
+        .line-promotion {
+
+            width: 150px;
+
+            left: 20%;
+
+            top: 64%;
+
+            transform:
+                rotate(-20deg);
+        }
+
+
+        .line-pay {
+
+            width: 160px;
+
+            left: 35%;
+
+            top: 20%;
+
+            transform:
+                rotate(40deg);
+        }
+
+
+        .line-college {
+
+            width: 150px;
+
+            right: 20%;
+
+            top: 32%;
+
+            transform:
+                rotate(165deg);
+        }
+
+
+        .line-parish {
+
+            width: 165px;
+
+            right: 17%;
+
+            top: 52%;
+
+            transform:
+                rotate(184deg);
+        }
+
+
+        .line-christmas {
+
+            width: 150px;
+
+            right: 20%;
+
+            top: 64%;
+
+            transform:
+                rotate(200deg);
+        }
+
+
+        .line-inheritance {
+
+            width: 160px;
+
+            right: 35%;
+
+            top: 20%;
+
+            transform:
+                rotate(140deg);
+        }
+
+
+        /* =========================================
+           FRUITS
+        ========================================= */
+
+        .tree-fruit {
+
+            position: absolute;
+
+            width: 34px;
+            height: 34px;
+
+            border-radius: 50%;
+
+            z-index: 50;
+
+            cursor: pointer;
+
+            box-shadow:
+                inset -6px -7px 8px rgba(0,0,0,.25),
+                2px 4px 7px rgba(0,0,0,.3);
+
+            transition: .25s;
+        }
+
+
+        .tree-fruit::before {
+
+            content: "";
+
+            position: absolute;
+
+            width: 13px;
+
+            height: 7px;
+
+            left: 11px;
+
+            top: -6px;
+
+            background: #38652d;
+
+            border-radius:
+                100% 0 100% 0;
+
+            transform:
+                rotate(-25deg);
+        }
+
+
+        .tree-fruit:hover {
+
+            transform:
+                scale(1.35)
+                rotate(8deg);
+        }
+
+
+        .fruit-red {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ff5757,
+                    #b91f2d
+                );
+        }
+
+
+        .fruit-yellow {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ffe66b,
+                    #e7a900
+                );
+        }
+
+
+        .fruit-orange {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ffad55,
+                    #dc5d18
+                );
+        }
+
+
+        .fruit-purple {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #c27bdd,
+                    #733b91
+                );
+        }
+
+
+        .fruit-pink {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ff9ebc,
+                    #d84e7e
+                );
+        }
+
+
+        /* =========================================
+           FRUIT POSITIONS
+        ========================================= */
+
+        .fruit1 {
+
+            left: 25%;
+
+            top: 21%;
+        }
+
+
+        .fruit2 {
+
+            left: 18%;
+
+            top: 41%;
+        }
+
+
+        .fruit3 {
+
+            left: 25%;
+
+            top: 58%;
+        }
+
+
+        .fruit4 {
+
+            left: 37%;
+
+            top: 12%;
+        }
+
+
+        .fruit5 {
+
+            right: 25%;
+
+            top: 21%;
+        }
+
+
+        .fruit6 {
+
+            right: 18%;
+
+            top: 41%;
+        }
+
+
+        .fruit7 {
+
+            right: 25%;
+
+            top: 58%;
+        }
+
+
+        .fruit8 {
+
+            right: 37%;
+
+            top: 12%;
+        }
+
+
+        /* =========================================
+           EXTRA LEAVES
+        ========================================= */
+
+        .extra-leaf {
+
+            position: absolute;
+
+            width: 20px;
+
+            height: 35px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #69aa55,
+                    #2d7137
+                );
+
+            border-radius:
+                100% 0 100% 0;
+
+            z-index: 40;
+
+            box-shadow:
+                1px 2px 3px rgba(0,0,0,.2);
+        }
+
+
+        .leaf1 {
+
+            left: 18%;
+
+            top: 15%;
+
+            transform:
+                rotate(-30deg);
+        }
+
+
+        .leaf2 {
+
+            left: 31%;
+
+            top: 7%;
+
+            transform:
+                rotate(35deg);
+        }
+
+
+        .leaf3 {
+
+            left: 42%;
+
+            top: 17%;
+
+            transform:
+                rotate(-20deg);
+        }
+
+
+        .leaf4 {
+
+            left: 12%;
+
+            top: 35%;
+
+            transform:
+                rotate(50deg);
+        }
+
+
+        .leaf5 {
+
+            right: 18%;
+
+            top: 15%;
+
+            transform:
+                rotate(30deg);
+        }
+
+
+        .leaf6 {
+
+            right: 31%;
+
+            top: 7%;
+
+            transform:
+                rotate(-35deg);
+        }
+
+
+        .leaf7 {
+
+            right: 42%;
+
+            top: 17%;
+
+            transform:
+                rotate(20deg);
+        }
+
+
+        .leaf8 {
+
+            right: 12%;
+
+            top: 35%;
+
+            transform:
+                rotate(-50deg);
+        }
+
+
+        /* =========================================
+           INFORMATION SECTIONS
+        ========================================= */
+
+        .content-section {
+
+            display: none;
+
+            max-width: 1000px;
+
+            margin: 45px auto;
+
+            padding: 35px;
+
+            background:
+                rgba(255,255,255,.96);
+
+            border-radius: 25px;
+
+            box-shadow:
+                0 7px 25px rgba(0,0,0,.2);
+        }
+
+
+        .content-section h2 {
+
+            text-align: center;
+
+            color: #36763e;
+
+            margin-bottom: 20px;
+        }
+
+
+        .content-section p {
+
+            line-height: 1.8;
+
+            margin-bottom: 15px;
+        }
+
+
+        /* =========================================
+           CARDS
+        ========================================= */
+
+        .card-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(190px,1fr)
+                );
+
+            gap: 16px;
+        }
+
+
+        .info-card {
+
+            background: #f7fff4;
+
+            border:
+                2px solid #b9d8b1;
+
+            padding: 18px;
+
+            border-radius: 18px;
+
+            cursor: pointer;
+
+            transition: .25s;
+        }
+
+
+        .info-card:hover {
+
+            transform:
+                translateY(-5px);
+
+            box-shadow:
+                0 5px 12px rgba(0,0,0,.15);
+        }
+
+
+        /* =========================================
+           ABOUT US
+        ========================================= */
+
+        .member {
+
+            text-align: center;
+        }
+
+
+        .flower {
+
+            font-size: 43px;
+
+            margin-bottom: 8px;
+        }
+
+
+        .member-name {
+
+            background: white;
+
+            padding: 11px;
+
+            border-radius: 15px;
+
+            box-shadow:
+                0 3px 8px rgba(0,0,0,.12);
+        }
+
+
+        /* =========================================
+           MODAL
+        ========================================= */
+
+        .modal {
+
+            display: none;
+
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 2000;
+
+            background:
+                rgba(0,0,0,.58);
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 20px;
+        }
+
+
+        .modal-box {
+
+            width: 680px;
+
+            max-width: 95%;
+
+            max-height: 85vh;
+
+            overflow-y: auto;
+
+            padding: 30px;
+
+            background: white;
+
+            border-radius: 25px;
+
+            box-shadow:
+                0 15px 40px rgba(0,0,0,.4);
+        }
+
+
+        .modal-box h2 {
+
+            text-align: center;
+
+            color: #34743b;
+
+            margin-bottom: 20px;
+        }
+
+
+        .modal-box h3 {
+
+            color: #6b4727;
+
+            margin-top: 20px;
+
+            margin-bottom: 10px;
+        }
+
+
+        .choice {
+
+            padding: 13px;
+
+            margin: 8px 0;
+
+            background: #edf8e9;
+
+            border-left:
+                6px solid #4c9145;
+
+            border-radius: 10px;
+        }
+
+
+        .fruit-value {
+
+            display: inline-block;
+
+            padding: 9px 14px;
+
+            margin: 4px;
+
+            background: #fff2ae;
+
+            border-radius: 20px;
+
+            font-weight: bold;
+        }
+
+
+        .edit-area {
+
+            width: 100%;
+
+            min-height: 170px;
+
+            margin-top: 10px;
+
+            padding: 15px;
+
+            border:
+                2px dashed #79a96e;
+
+            border-radius: 15px;
+
+            font-family: Georgia, serif;
+
+            resize: vertical;
+        }
+
+
+        .save-button {
+
+            margin-top: 10px;
+
+            padding: 11px 22px;
+
+            border: none;
+
+            border-radius: 15px;
+
+            background: #4d8d43;
+
+            color: white;
+
+            cursor: pointer;
+
+            font-family: Georgia, serif;
+        }
+
+
+        .close-button {
+
+            display: block;
+
+            margin: 20px auto 0;
+
+            padding: 11px 25px;
+
+            border: none;
+
+            border-radius: 20px;
+
+            background: #39783f;
+
+            color: white;
+
+            cursor: pointer;
+
+            font-family: Georgia, serif;
+        }
+
+
+        /* =========================================
+           MOBILE
+        ========================================= */
+
+        @media(max-width: 850px) {
+
+            .side-menu {
+
+                position: relative;
+
+                width: 100%;
+
+                height: auto;
+            }
+
+
+            .main {
+
+                margin-left: 0;
+
+                padding: 25px 10px;
+            }
+
+
+            header h1 {
+
+                font-size: 38px;
+            }
+
+
+            .realistic-tree-container {
+
+                height: 600px;
+
+                width: 100%;
+            }
+
+
+            .tree-topic {
+
+                width: 130px;
+
+                font-size: 10px;
+
+                padding: 8px;
+            }
+
+
+            .tree-line {
+
+                display: none;
+            }
+
+
+            .tree-fruit {
+
+                width: 25px;
+
+                height: 25px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================
+         SKY
+    ========================================= -->
+
+    <div class="sky">
+
+        <div class="sun"></div>
+
+        <div class="cloud cloud1"></div>
+
+        <div class="cloud cloud2"></div>
+
+    </div>
+
+
+
+    <!-- =========================================
+         SIDE MENU
+    ========================================= -->
+
+    <nav class="side-menu">
+
+        <h2>
+            🌳 My Decision Tree
+        </h2>
+
+
+        <button
+            class="menu-button"
+            onclick="showSection('about')">
+
+            About
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="showSection('situations')">
+
+            Life Situations
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="showSection('financial')">
+
+            Financial Decisions
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="showSection('values')">
+
+            Values / Spiritual Values
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="showSection('learned')">
+
+            What We Have Learned
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="showSection('aboutus')">
+
+            About Us
+
+        </button>
+
+    </nav>
+
+
+
+    <!-- =========================================
+         MAIN
+    ========================================= -->
+
+    <main class="main">
+
+
+        <header>
+
+            <h1>
+                🌳 My Decision Tree 🌳
+            </h1>
+
+
+            <div class="verse">
+
+                “Wisdom and knowledge build a secure and prosperous home.
+                Proverbs 24:3-4"
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =========================================
+             GET STARTED
+        ========================================= -->
+
+        <div class="start-container">
+
+            <button
+                class="start-button"
+                onclick="startTree()">
+
+                🌱 GET STARTED 🌱
+
+            </button>
+
+        </div>
+
+
+
+        <!-- =========================================
+             REALISTIC TREE
+             HIDDEN UNTIL GET STARTED
+        ========================================= -->
+
+        <section id="treeSection">
+
+
+            <h2 class="tree-title">
+
+                🌳 Explore the Decisions on the Tree 🌳
+
+            </h2>
+
+
+
+            <div class="realistic-tree-container">
+
+
+                <!-- REALISTIC TREE IMAGE -->
+
+                <img
+                    src="c:\Users\ASUS\Downloads\tree.png"
+                    class="realistic-tree"
+                    alt="Realistic tree"
+                >
+
+                <!-- =================================
+                     LEFT SIDE SITUATIONS
+                ================================= -->
+
+                <div
+                    class="tree-topic topic-medical"
+                    onclick="openSituation('medical')">
+
+                    🌿 UNEXPECTED
+                    <br>
+                    MEDICAL BILLS
+
+                </div>
+
+
+
+                <div
+                    class="tree-topic topic-vacation"
+                    onclick="openSituation('vacation')">
+
+                    🌿 FAMILY
+                    <br>
+                    VACATION
+
+                </div>
+
+
+
+                <div
+                    class="tree-topic topic-promotion"
+                    onclick="openSituation('promotion')">
+
+                    🌿 JOB
+                    <br>
+                    PROMOTION
+
+                </div>
+
+
+
+                <div
+                    class="tree-topic topic-pay"
+                    onclick="openSituation('pay')">
+
+                    🌿 PAY
+                    <br>
+                    INCREASE
+
+                </div>
+
+
+
+                <!-- =================================
+                     RIGHT SIDE SITUATIONS
+                ================================= -->
+
+                <div
+                    class="tree-topic topic-college"
+                    onclick="openSituation('college')">
+
+                    🌿 COLLEGE
+                    <br>
+                    TUITION DUE
+
+                </div>
+
+
+
+                <div
+                    class="tree-topic topic-parish"
+                    onclick="openSituation('parish')">
+
+                    🌿 PARISH
+                    <br>
+                    BUILDING FUND
+
+                </div>
+
+
+
+                <div
+                    class="tree-topic topic-christmas"
+                    onclick="openSituation('christmas')">
+
+                    🌿 CHRISTMAS
+                    <br>
+                    SHOPPING
+
+                </div>
+
+
+
+                <div
+                    class="tree-topic topic-inheritance"
+                    onclick="openSituation('inheritance')">
+
+                    🌿 INHERITANCE
+                    <br>
+                    RECEIVED
+
+                </div>
+
+
+
+                <!-- =================================
+                     FRUITS
+                ================================= -->
+
+                <!-- Medical Bills -->
+
+                <div
+                    class="tree-fruit fruit-red fruit1"
+                    onclick="openSituation('medical')"
+                    title="Responsibility">
+                </div>
+
+
+
+                <!-- Family Vacation -->
+
+                <div
+                    class="tree-fruit fruit-yellow fruit2"
+                    onclick="openSituation('vacation')"
+                    title="Gratitude, Responsibility, Prudence">
+                </div>
+
+
+
+                <!-- Job Promotion -->
+
+                <div
+                    class="tree-fruit fruit-orange fruit3"
+                    onclick="openSituation('promotion')"
+                    title="Responsibility, Trust in God, Temperance, Prudence">
+                </div>
+
+
+
+                <!-- Pay Increase -->
+
+                <div
+                    class="tree-fruit fruit-purple fruit4"
+                    onclick="openSituation('pay')"
+                    title="Temperance, Responsibility, Prudence">
+                </div>
+
+
+
+                <!-- College Tuition -->
+
+                <div
+                    class="tree-fruit fruit-pink fruit5"
+                    onclick="openSituation('college')"
+                    title="Responsibility, Trust in God">
+                </div>
+
+
+
+                <!-- Parish Building Fund -->
+
+                <div
+                    class="tree-fruit fruit-red fruit6"
+                    onclick="openSituation('parish')"
+                    title="Generosity, Gratitude, Trust in God, Service to Others">
+                </div>
+
+
+
+                <!-- Christmas Shopping -->
+
+                <div
+                    class="tree-fruit fruit-yellow fruit7"
+                    onclick="openSituation('christmas')"
+                    title="Gratitude, Service to Others, Trust in God">
+                </div>
+
+
+
+                <!-- Inheritance -->
+
+                <div
+                    class="tree-fruit fruit-orange fruit8"
+                    onclick="openSituation('inheritance')"
+                    title="Generosity, Temperance, Prudence, Responsibility">
+                </div>
+
+
+
+                <!-- =================================
+                     MANY EXTRA LEAVES
+                ================================= -->
+
+                <div class="extra-leaf leaf1"></div>
+
+                <div class="extra-leaf leaf2"></div>
+
+                <div class="extra-leaf leaf3"></div>
+
+                <div class="extra-leaf leaf4"></div>
+
+                <div class="extra-leaf leaf5"></div>
+
+                <div class="extra-leaf leaf6"></div>
+
+                <div class="extra-leaf leaf7"></div>
+
+                <div class="extra-leaf leaf8"></div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             ABOUT
+        ========================================= -->
+
+        <section
+            id="about"
+            class="content-section">
+
+            <h2>
+                🌱 About My Decision Tree
+            </h2>
+
+
+            <p>
+
+                "My Decision Tree" is an interactive website that shows
+                how different financial situations can lead to different
+                decisions that may be good or bad and develop moral and spiritual values in life.
+
+            </p>
+
+
+            <p>
+
+                Each branch represents a life situations that
+                happen in reality, while the
+                financial decisions represent possible actions we are going to make every life situations. The
+                fruits represent the values that can guide us in making
+                responsible and meaningful choices.
+
+            </p>
+
+        </section>
+
+
+
+        <!-- =========================================
+             LIFE SITUATIONS
+        ========================================= -->
+
+        <section
+            id="situations"
+            class="content-section">
+
+            <h2>
+                🌷 Life Situations
+            </h2>
+
+
+            <div class="card-grid">
+
+
+                <div
+                    class="info-card"
+                    onclick="openSituation('medical')">
+
+                    🌷 UNEXPECTED MEDICAL BILLS
+
+                </div>
+
+
+                <div
+                    class="info-card"
+                    onclick="openSituation('promotion')">
+
+                    🌷 JOB PROMOTION
+
+                </div>
+
+
+                <div
+                    class="info-card"
+                    onclick="openSituation('christmas')">
+
+                    🌷 CHRISTMAS SHOPPING
+
+                </div>
+
+
+                <div
+                    class="info-card"
+                    onclick="openSituation('college')">
+
+                    🌷 COLLEGE TUITION DUE
+
+                </div>
+
+
+                <div
+                    class="info-card"
+                    onclick="openSituation('inheritance')">
+
+                    🌷 INHERITANCE RECEIVED
+
+                </div>
+
+
+                <div
+                    class="info-card"
+                    onclick="openSituation('parish')">
+
+                    🌷 PARISH BUILDING FUND
+
+                </div>
+
+
+                <div
+                    class="info-card"
+                    onclick="openSituation('vacation')">
+
+                    🌷 FAMILY VACATION
+
+                </div>
+
+
+                <div
+                    class="info-card"
+                    onclick="openSituation('pay')">
+
+                    🌷 PAY INCREASE
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             FINANCIAL DECISIONS
+        ========================================= -->
+
+        <section
+            id="financial"
+            class="content-section">
+
+            <h2>
+                💰 Financial Decisions
+            </h2>
+
+
+            <div class="card-grid">
+
+
+                <div class="info-card">
+                    📱 Buying the latest smartphone
+                </div>
+
+
+                <div class="info-card">
+                    🏦 Starting an emergency fund
+                </div>
+
+
+                <div class="info-card">
+                    ⛪ Donating to church
+                </div>
+
+
+                <div class="info-card">
+                    🎓 Investing in education
+                </div>
+
+
+                <div class="info-card">
+                    🛒 Impulse spending
+                </div>
+
+
+                <div class="info-card">
+                    💳 Taking on credit card debt
+                </div>
+
+
+                <div class="info-card">
+                    🌱 Saving for retirement
+                </div>
+
+
+                <div class="info-card">
+                    📊 Budgeting for necessities
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             VALUES
+        ========================================= -->
+
+        <section
+            id="values"
+            class="content-section">
+
+            <h2>
+                🌸 Values / Spiritual Values
+            </h2>
+
+
+            <div class="card-grid">
+
+
+                <div class="info-card">
+                    🙏 Gratitude. It is showing appreciation for the kindness, help, or good things that happen in your life.
+                </div>
+
+
+                <div class="info-card">
+                    ❤️ Generosity.The quality of being kind and generous.
+                </div>
+
+
+                <div class="info-card">
+                    🌿 Prudence. A skill and good judgment in the management of affairs and the use of resources.
+                </div>
+
+
+                <div class="info-card">
+                    🍃 Temperance. The quality of moderation or self-restraint.
+                </div>
+
+
+                <div class="info-card">
+                    🌳 Responsibility. State or fact of having a duty to deal with something or of having control over someone.
+                </div>
+
+
+                <div class="info-card">
+                    🕊️ Detachment. The state of being objective or aloof.
+                </div>
+
+
+                <div class="info-card">
+                    ✝️ Trust in God. Trusting God for His plans.
+                </div>
+
+
+                <div class="info-card">
+                    🤝 Service to Others. It involves putting the needs of others before your own and acting with genuine care and empathy.
+                </div>
+
+
+                <div class="info-card">
+                    💛 Faith. Complete trust or confidence in someone or something.
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             WHAT WE HAVE LEARNED
+        ========================================= -->
+
+        <section
+            id="learned"
+            class="content-section">
+
+            <h2>
+                📖 What We Have Learned
+            </h2>
+
+
+            <p>
+
+                Making decisions involving money is not easy. In buying
+                things, we need to think about our priorities, the events,
+                the struggles, and we need to think for the common good.
+                We need to budget our money, because every cent are hard
+                to get and find. And we also realized that as we get older,
+                money isn't just a paper or a metal that we need, to buy
+                what we want. It is the blood, sweat, and tears of our
+                parents who worked hard to be able to provide for us.
+                And as we also get older, we are becoming more aware that
+                budgeting and prioritizing our needs over our wants are
+                important.
+
+            </p>
+
+        </section>
+
+
+
+        <!-- =========================================
+             ABOUT US
+        ========================================= -->
+
+        <section
+            id="aboutus"
+            class="content-section">
+
+            <h2>
+                🌻 About Us
+            </h2>
+
+
+            <p style="text-align:center;">
+
+                <strong>
+                    Performance Task in Religious Education
+                </strong>
+
+            </p>
+
+
+            <p style="text-align:center;">
+
+                <strong>
+                    by Group 5
+                </strong>
+
+            </p>
+
+
+            <div class="card-grid">
+
+
+                <div class="member">
+
+                    <div class="flower">
+                        🌻
+                    </div>
+
+                    <div class="member-name">
+
+                        Precious Avrin B. Catapang
+
+                    </div>
+
+                </div>
+
+
+                <div class="member">
+
+                    <div class="flower">
+                        🌷
+                    </div>
+
+                    <div class="member-name">
+
+                        Kylie Gwyneth D. del Rosario
+
+                    </div>
+
+                </div>
+
+
+                <div class="member">
+
+                    <div class="flower">
+                        🌸
+                    </div>
+
+                    <div class="member-name">
+
+                        Aleeyah Elyn T. Frayre
+
+                    </div>
+
+                </div>
+
+
+                <div class="member">
+
+                    <div class="flower">
+                        🌼
+                    </div>
+
+                    <div class="member-name">
+
+                        Danlord A. Tubieron
+
+                    </div>
+
+                </div>
+
+
+                <div class="member">
+
+                    <div class="flower">
+                        🌺
+                    </div>
+
+                    <div class="member-name">
+
+                        Jade Nash H. Villeza
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- =========================================
+         MODAL
+    ========================================= -->
+
+    <div
+        class="modal"
+        id="decisionModal">
+
+
+        <div class="modal-box">
+
+
+            <h2 id="modalTitle"></h2>
+
+
+            <div id="modalContent"></div>
+
+
+            <button
+                class="close-button"
+                onclick="closeModal()">
+
+                Close
+
+            </button>
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =========================================
+         JAVASCRIPT
+    ========================================= -->
+
+    <script>
+
+
+        /* =========================================
+           START TREE
+        ========================================= */
+
+        function startTree() {
+
+            const tree =
+                document.getElementById("treeSection");
+
+
+            tree.style.display = "block";
+
+
+            document.querySelector(
+                ".start-container"
+            ).style.display = "none";
+
+
+            tree.scrollIntoView({
+
+                behavior: "smooth",
+
+                block: "start"
+
+            });
+
+        }
+
+
+
+        /* =========================================
+           MENU
+        ========================================= */
+
+        function showSection(id) {
+
+
+            document
+                .querySelectorAll(".content-section")
+                .forEach(section => {
+
+                    section.style.display = "none";
+
+                });
+
+
+            const selected =
+                document.getElementById(id);
+
+
+            if (selected) {
+
+                selected.style.display = "block";
+
+
+                selected.scrollIntoView({
+
+                    behavior: "smooth",
+
+                    block: "start"
+
+                });
+
+            }
+
+        }
+
+
+
+        /* =========================================
+           DECISION TREE INFORMATION
+        ========================================= */
+
+        const decisions = {
+
+
+            medical: {
+
+                title:
+                    "UNEXPECTED MEDICAL BILLS",
+
+                choices: [
+
+                    "Starting an emergency fund"
+
+                ],
+
+                fruits: [
+
+                    "Responsibility"
+
+                ]
+
+            },
+
+
+            college: {
+
+                title:
+                    "COLLEGE TUITION DUE",
+
+                choices: [
+
+                    "Investing in education",
+
+                    "Starting an emergency fund",
+
+                    "Budgeting for necessities"
+
+                ],
+
+                fruits: [
+
+                    "Responsibility",
+
+                    "Trust in God"
+
+                ]
+
+            },
+
+
+            vacation: {
+
+                title:
+                    "FAMILY VACATION",
+
+                choices: [
+
+                    "Budgeting for necessities",
+
+                    "Taking on credit card debt"
+
+                ],
+
+                fruits: [
+
+                    "Gratitude",
+
+                    "Responsibility",
+
+                    "Prudence"
+
+                ]
+
+            },
+
+
+            pay: {
+
+                title:
+                    "PAY INCREASE",
+
+                choices: [
+
+                    "Investing on education",
+
+                    "Starting an emergency fund",
+
+                    "Saving for retirement",
+
+                    "Taking on credit card debt"
+
+                ],
+
+                fruits: [
+
+                    "Temperance",
+
+                    "Responsibility",
+
+                    "Prudence"
+
+                ]
+
+            },
+
+
+            promotion: {
+
+                title:
+                    "JOB PROMOTION",
+
+                choices: [
+
+                    "Budgeting for necessities",
+
+                    "Investing in education",
+
+                    "Saving for retirement",
+
+                    "Starting an emergency fund"
+
+                ],
+
+                fruits: [
+
+                    "Responsibility",
+
+                    "Trust in God",
+
+                    "Temperance",
+
+                    "Prudence"
+
+                ]
+
+            },
+
+
+            parish: {
+
+                title:
+                    "PARISH BUILDING FUND",
+
+                choices: [
+
+                    "Donating to church"
+
+                ],
+
+                fruits: [
+
+                    "Generosity",
+
+                    "Gratitude",
+
+                    "Trust in God",
+
+                    "Service to Others"
+
+                ]
+
+            },
+
+
+            christmas: {
+
+                title:
+                    "CHRISTMAS SHOPPING",
+
+                choices: [
+
+                    "Donating to church",
+
+                    "Buying the latest smartphone"
+
+                ],
+
+                fruits: [
+
+                    "Gratitude",
+
+                    "Service to Others",
+
+                    "Trust in God"
+
+                ]
+
+            },
+
+
+            inheritance: {
+
+                title:
+                    "INHERITANCE RECEIVED",
+
+                choices: [
+
+                    "Donating to church",
+
+                    "Investing on education",
+
+                    "Starting an emergency fund",
+
+                    "Taking on credit card debt",
+
+                    "Saving for retirement"
+
+                ],
+
+                fruits: [
+
+                    "Generosity",
+
+                    "Temperance",
+
+                    "Prudence",
+
+                    "Responsibility"
+
+                ]
+
+            }
+
+        };
+
+
+
+        /* =========================================
+           OPEN SITUATION
+        ========================================= */
+
+        function openSituation(type) {
+
+
+            const data =
+                decisions[type];
+
+
+            if (!data) {
+
+                return;
+
+            }
+
+
+            document.getElementById(
+                "modalTitle"
+            ).textContent =
+                data.title;
+
+
+            let html = "";
+
+
+            /* FINANCIAL DECISIONS */
+
+            html += `
+
+                <h3>
+                    🌿 Possible Financial Decisions
+                </h3>
+
+            `;
+
+
+            data.choices.forEach(choice => {
+
+
+                html += `
+
+                    <div class="choice">
+
+                        🌱 ${choice}
+
+                    </div>
+
+                `;
+
+            });
+
+
+
+            /* FRUITS */
+
+            html += `
+
+                <h3>
+                    🍎 Fruits / Values
+                </h3>
+
+            `;
+
+
+            data.fruits.forEach(fruit => {
+
+
+                html += `
+
+                    <span class="fruit-value">
+
+                        🍎 ${fruit}
+
+                    </span>
+
+                `;
+
+            });
+
+
+
+            /* EDITABLE AREA */
+
+            html += `
+
+                <h3>
+                    ✏️ Your Notes
+                </h3>
+
+                <textarea
+                    class="edit-area"
+                    placeholder="Type your own explanation, ideas, or notes here..."
+                ></textarea>
+
+                <button
+                    class="save-button"
+                    onclick="saveNotes()">
+
+                    Save Notes
+
+                </button>
+
+            `;
+
+
+            document.getElementById(
+                "modalContent"
+            ).innerHTML = html;
+
+
+            document.getElementById(
+                "decisionModal"
+            ).style.display = "flex";
+
+        }
+
+
+
+        /* =========================================
+           SAVE NOTES
+        ========================================= */
+
+        function saveNotes() {
+
+            alert(
+                "Your notes have been saved for this session! 🌱"
+            );
+
+        }
+
+
+
+        /* =========================================
+           CLOSE MODAL
+        ========================================= */
+
+        function closeModal() {
+
+            document.getElementById(
+                "decisionModal"
+            ).style.display = "none";
+
+        }
+
+
+
+        /* =========================================
+           CLICK OUTSIDE MODAL
+        ========================================= */
+
+        document
+            .getElementById("decisionModal")
+            .addEventListener(
+                "click",
+                function(event) {
+
+                    if (
+                        event.target === this
+                    ) {
+
+                        closeModal();
+
+                    }
+
+                }
+            );
+
+
+    </script>
+
+
+</body>
+
+</html>
